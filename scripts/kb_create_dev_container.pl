@@ -68,8 +68,10 @@ if ($runtime eq '')
 }
 
 my $kbase_git_base = 'kbase@git.kbase.us';
+my $dev_container_from_git;
 
-my $rc = GetOptions("runtime=s" => \$runtime);
+my $rc = GetOptions("runtime=s" => \$runtime,
+		    "from-git" => \$dev_container_from_git);
 
 ($rc && @ARGV >= 1) or die "Usage: create-kb-dev-container target-dir [module-list]\n";
 
@@ -84,9 +86,21 @@ if (-d $dest_dir)
 mkdir($dest_dir) || die "Cannot create $dest_dir: $!";
 $dest_dir = abs_path($dest_dir);
 
-download_and_extract();
+if ($dev_container_from_git)
+{
+    checkout_dev_container();
+}
+else
+{
+    download_and_extract();
+}
 load_modules();
 configure();
+
+sub checkout_dev_container
+{
+    load_git_module("$kbase_git_base:/dev_container.git", $dest_dir);
+}
 
 sub download_and_extract
 {
@@ -140,9 +154,9 @@ sub load_modules
 
 sub load_git_module
 {
-    my($git_url) = @_;
+    my($git_url, $target) = @_;
     print "Cloning $git_url...\n";
-    my $rc = system("git", "clone", $git_url);
+    my $rc = system("git", "clone", $git_url, defined($target) ? $target : ());
     if ($rc != 0)
     {
 	die "Could not clone git repository $git_url (exited with code $rc)";
