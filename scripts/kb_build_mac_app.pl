@@ -6,8 +6,21 @@
 use File::Temp;
 use strict;
 use Cwd 'abs_path';
+use File::Copy;
+use Bio::KBase::DeploymentTools;
 
-@ARGV == 1 or die "Usage: build-app target\n";
+use Getopt::Long;
+
+my $version = "1.000";
+
+my $libpath = Bio::KBase::DeploymentTools->install_path;
+my $icon = "$libpath/DeploymentTools/KBASE_Icon_03.icns";
+$icon = abs_path($icon);
+-f $icon or die "Icon $icon not found\n";
+
+my $rc = GetOptions("version=s" => \$version);
+
+($rc && @ARGV == 1) or die "Usage: build-app [--version version] target\n";
 
 my $target = shift;
 
@@ -31,7 +44,6 @@ if (!$cur_top)
 }
 chdir($cur_top) or die "Cannot chdir $cur_top: $!";
 
-
 #
 # Construct the script that will create the app wrapper.
 #
@@ -51,9 +63,23 @@ if ($rc != 0)
 }
 
 #
+# Edit the property list to set our icon and other information.
+#
+
+my $plist_file = "$target/Contents/Info.plist";
+my $plist_file_base = $plist_file;
+$plist_file_base =~ s/\.plist$//;
+
+copy($icon, "$target/Contents/Resources/kbase-icon.icns") or die "Cannot copy $icon to $target/Contents/Resources/kbase-icon.icns: $!";
+
+system("defaults", "write", $plist_file_base, "CFBundleIconFile", "kbase-icon");
+system("defaults", "write", $plist_file_base, "CFBundleShortVersionString", $version);
+
+#
 # Now we have the framework we can replicate our runtime into it.
 #
 
+print STDERR "copy runtime\n";
 $rc = system("rsync", "-ar", "$runtime/.", "$target/runtime");
 if ($rc != 0) {
     die "Error syncing $runtime to $target/runtime\n";
@@ -62,6 +88,7 @@ if ($rc != 0) {
 #
 # We may now deploy into the application.
 #
+print STDERR "deploy\n";
 $rc = system("make", "TARGET=$target/deployment", "WRAP_PERL_TOOL=wrap_perl_app", "deploy");
 if ($rc != 0) {
     die "Error deploying";
@@ -72,6 +99,7 @@ if ($rc != 0) {
 #
 
 write_user_init("$target/user-env.sh");
+
 
 sub write_user_init
 {
