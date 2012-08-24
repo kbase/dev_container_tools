@@ -1,10 +1,10 @@
 =head1 NAME
 
-    create-kb-script-module
+    kb_create_script_module
 
 =head1 SYNOPSIS
 
-    create-kb-script-module module-name
+    kb_create_script_module module-name [script1 script2 ...]
 
 =head1 DESCRIPTION
 
@@ -16,6 +16,10 @@ directory will be set up for the development of new command line scripts in Perl
 =item module-name
 
 The name of the new module to be created. 
+
+=item scriptN
+
+The name of a script to create as a stub in the module. 
 
 =back
 
