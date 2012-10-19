@@ -15,7 +15,6 @@ error("$name already exists") if -e $name;
 my $date = `date`;
 
 `mkdir "$name"`;
-`touch "$name/readme.txt"`;
 `cat > "$name/readme.txt" << EOF
   created repo for $name on $date
 `;
@@ -29,6 +28,22 @@ my $date = `date`;
 `cat > "$name/scripts/readme-scripts.txt" << EOF
   put your perl scripts and java run scripts here
 `;
+
+`mkdir "$name/test-client"`;
+`cat > "$name/test-client/readme-client-tests.txt" << EOF
+  put your client library tests here
+`;
+
+`mkdir "$name/script-tests"`;
+`cat > "$name/script-tests/readme-script-tests.txt" << EOF
+  put your command line interface tests here
+`;
+
+`mkdir "$name/server-tests"`;
+`cat > "$name/server-tests/readme-server-tests.txt" << EOF
+  put your server tests here
+`;
+
 
 if ($is_java) {
 
@@ -105,7 +120,7 @@ EOF
 
 sub error {
         print $_[0], "\n";
-        exit;
+        exit -1;
 }
 sub usage {
         print<<EOF;
