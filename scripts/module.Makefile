@@ -110,6 +110,8 @@ deploy-all: deploy-client deploy-scripts deploy-server
 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
+deploy-libs:
+
 # Deploying scripts need some special care. They need to run
 # in a certian runtime environment. Users should not have
 # to modify their user environments to run kbase scripts other
@@ -143,6 +145,8 @@ deploy-scripts:
 		cp $$src $(TARGET)/plbin ; \
 		$(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
 	done
+
+deploy-docs:
 
 deploy-server:
 
