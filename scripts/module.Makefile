@@ -42,7 +42,7 @@ default:
 # Test Section
 
 test: test-client test-scripts
-	echo "runnint cleint and script tests"
+	echo "runnint client and script tests"
 
 test-all: test-client test-scripts test-server
 

@@ -1,4 +1,38 @@
 #!/usr/bin/perl -w
+
+=head1 NAME
+
+    kb_create_repo
+
+=head1 SYNOPSIS
+
+    kb_create_repo.pl -name <repo_name>
+
+    kb_create_repo.pl -name <repo_name> -java
+
+=head1 DESCRIPTION
+
+Create a new directory that represents a skeleton for building a service module.
+Basic subdirectories are created, and some care is given to emmulate language idioms
+for setting up a module's directory structure.
+
+=over 4
+
+=item -java
+
+The module will be a java service module. The default is a perl service module.
+
+=back
+
+=cut
+
+
+
+
+
+
+
+
 use strict;
 use IO::File;
 use Getopt::Long;
