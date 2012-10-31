@@ -115,6 +115,12 @@ export KB_RUNTIME="$_dir/runtime"
 export KB_PERL_PATH="$_dir/deployment/lib"
 export PATH=$KB_RUNTIME/bin:$KB_TOP/bin:$PATH
 export PERL5LIB=$KB_PERL_PATH
+
+echo "
+
+Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation.
+
+"
 EOF
     close(F);
     chmod(0755, $file);
@@ -130,8 +136,8 @@ sub write_applescript
     print $fh "store script myScript in \"$dir\"\n";
 }
 
-    
-    
+
+
 
 
 sub application_applescript
@@ -146,7 +152,7 @@ set base to POSIX path of here
 set init to "source '" & base & "/user-env.sh'"
 tell application "Terminal"
      activate
-     
+
      do script with command init
 end tell
 
