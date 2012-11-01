@@ -2,8 +2,12 @@
 #
 # Build a mac app wrapper of the current dev container.
 #
+# Argument needs to be the KBase.app application name.
+#
 
 use File::Temp;
+use File::Slurp;
+use Data::Dumper;
 use strict;
 use Cwd 'abs_path';
 use File::Copy;
@@ -52,6 +56,7 @@ my $tmp = File::Temp->new;
 
 write_applescript($tmp, $target);
 close($tmp);
+print Dumper($tmp);
 
 #
 # And run.
@@ -59,6 +64,7 @@ close($tmp);
 my $rc = system("osascript", $tmp->filename);
 if ($rc != 0)
 {
+    print read_file($tmp->filename);
     die "Error running applescript\n";
 }
 
