@@ -56,17 +56,18 @@ my $tmp = File::Temp->new;
 
 write_applescript($tmp, $target);
 close($tmp);
-print Dumper($tmp);
 
 #
 # And run.
 #
+
 my $rc = system("osascript", $tmp->filename);
 if ($rc != 0)
 {
     print read_file($tmp->filename);
     die "Error running applescript\n";
 }
+
 #
 # Edit the property list to set our icon and other information.
 #
@@ -103,10 +104,11 @@ if ($rc != 0) {
 # And write our user-init script.
 #
 
-write_user_init("$target/user-env.sh");
+write_user_bash_init("$target/user-env.sh");
 write_user_csh_init("$target/user-env.csh");
+write_user_zsh_init("$target/user-env.zsh");
 
-sub write_user_init
+sub write_user_bash_init
 {
     my($file) = @_;
     open(F, ">", $file) or die "Cannot write $file: $!";
@@ -114,6 +116,30 @@ sub write_user_init
 #!/bin/sh
 
 _dir=`dirname "$BASH_ARGV[0]"`
+
+export KB_TOP="$_dir/deployment"
+export KB_RUNTIME="$_dir/runtime"
+export KB_PERL_PATH="$_dir/deployment/lib"
+export PATH=$KB_RUNTIME/bin:$KB_TOP/bin:$PATH
+export PERL5LIB=$KB_PERL_PATH
+
+echo ""
+echo "Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation."
+echo ""
+EOF
+    close(F);
+    chmod(0755, $file);
+}
+
+sub write_user_zsh_init
+{
+    my($file) = @_;
+    open(F, ">", $file) or die "Cannot write $file: $!";
+    print F <<'EOF';
+#!/bin/sh
+
+_dir=`dirname "$0"`
+_dir=`cd "$_dir"; pwd`
 
 export KB_TOP="$_dir/deployment"
 export KB_RUNTIME="$_dir/runtime"
@@ -176,11 +202,13 @@ set here to path to me
 
 set base to POSIX path of here
 
-set is_csh to do shell script "/usr/bin/perl -e '$s = (getpwuid($>))[8]; print $s =~ /csh/ ? \"1\\n\" : \"0\\n\"'"
+set shell_type to do shell script "/usr/bin/perl -e '$s = (getpwuid($>))[8]; print $s =~ /csh/ ? \"csh\\n\" : ($s =~ /zsh/ ? \"zsh\\n\" : \"bash\\n\")'"
 
-if is_csh as number = 1 then
+if shell_type = "csh"
     set init to "source \"" & base & "/user-env.csh\""
-else
+else if shell_type = "zsh"
+    set init to "source \"" & base & "/user-env.zsh\""
+else 
     set init to "source \"" & base & "/user-env.sh\""
 end if
     
