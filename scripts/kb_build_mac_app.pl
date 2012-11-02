@@ -67,7 +67,6 @@ if ($rc != 0)
     print read_file($tmp->filename);
     die "Error running applescript\n";
 }
-
 #
 # Edit the property list to set our icon and other information.
 #
@@ -105,7 +104,7 @@ if ($rc != 0) {
 #
 
 write_user_init("$target/user-env.sh");
-
+write_user_csh_init("$target/user-env.csh");
 
 sub write_user_init
 {
@@ -122,11 +121,34 @@ export KB_PERL_PATH="$_dir/deployment/lib"
 export PATH=$KB_RUNTIME/bin:$KB_TOP/bin:$PATH
 export PERL5LIB=$KB_PERL_PATH
 
-echo "
+echo ""
+echo "Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation."
+echo ""
+EOF
+    close(F);
+    chmod(0755, $file);
+}
 
-Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation.
+sub write_user_csh_init
+{
+    my($file) = @_;
+    open(F, ">", $file) or die "Cannot write $file: $!";
+    print F <<EOF;
 
-"
+set kb_cmd=(\$_)
+set kb_path=`echo \$kb_cmd | perl -ne '/^\\s*source\\s+"?(.*)"?\$/ and print "\$1\\n"'`
+set kb_path=`dirname \$kb_path`
+set kb_path=`cd \$kb_path; pwd`
+
+setenv KB_TOP "\$kb_path/deployment"
+setenv KB_RUNTIME "\$kb_path/runtime"
+setenv KB_PERL_PATH "\$kb_path/deployment/lib"
+setenv PATH \$KB_RUNTIME/bin:\$KB_TOP/bin:\$PATH
+setenv PERL5LIB \$KB_PERL_PATH
+
+echo ""
+echo "Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation."
+echo ""
 EOF
     close(F);
     chmod(0755, $file);
@@ -154,8 +176,14 @@ set here to path to me
 
 set base to POSIX path of here
 
+set is_csh to do shell script "/usr/bin/perl -e '$s = (getpwuid($>))[8]; print $s =~ /csh/ ? \"1\\n\" : \"0\\n\"'"
 
-set init to "source '" & base & "/user-env.sh'"
+if is_csh as number = 1 then
+    set init to "source \"" & base & "/user-env.csh\""
+else
+    set init to "source \"" & base & "/user-env.sh\""
+end if
+    
 tell application "Terminal"
      activate
 
