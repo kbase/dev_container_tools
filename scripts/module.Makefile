@@ -24,15 +24,25 @@ SERVER_TESTS = $(wildcard server-tests/*.t)
 # science applications can be built.
 
 # A service is composed of a client and a server, each of which
-# should be independantly deployable. Clients is composed of
+# should be independantly deployable. Clients are composed of
 # an application programming interface and a command line
 # interface. In our make targets, the deploy-server deploys
 # the server, the deploy-client deploys the application
 # programming interface libraries, and the deploy-scripts deploys
 # the command line interface (usually scripts written in a
-# scripting language but java executables allso qualify), and the
-# deploy-all would be equivelant to deploying a service (client
+# scripting language but java executables also qualify), and the
+# deploy target would be equivelant to deploying a service (client
 # libs, scripts, and server).
+
+# Because the deployment of the server side code depends on the
+# specific software module being deployed, the strategy needs
+# to be one that leaves this decision to the module developer.
+# This is done by having the deploy target depend on the
+# deploy-server target. The module developer who chooses for
+# good reason not to deploy the server with the client simply
+# manages this dependancy accordingly. One option is to have
+# a deploy-server target that does nothing, the other is to
+# remove the dependancy from the deploy target.
 
 # A smiliar naming convention is used for tests. 
 
@@ -41,10 +51,11 @@ default:
 
 # Test Section
 
-test: test-client test-scripts
+test: test-client test-scripts test-server
 	echo "runnint client and script tests"
 
-test-all: test-client test-scripts test-server
+# test-all is depricated. 
+# test-all: test-client test-scripts test-server
 
 # What does it mean to test a client. This is a test of a client
 # library. If it is a client-server module, then it should be
@@ -104,9 +115,10 @@ test-server:
 # command line interface (scripts). The deployment of client
 # artifacts should not be dependent on deployment of a server.
 
-deploy: deploy-client deploy-scripts
+deploy: deploy-client deploy-scripts deploy-server
 
-deploy-all: deploy-client deploy-scripts deploy-server
+# deploy-all is depricated
+# deploy-all: deploy-client deploy-scripts deploy-server
 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
