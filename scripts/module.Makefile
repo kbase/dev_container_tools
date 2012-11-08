@@ -24,7 +24,7 @@ SERVER_TESTS = $(wildcard server-tests/*.t)
 # science applications can be built.
 
 # A service is composed of a client and a server, each of which
-# should be independantly deployable. Clients are composed of
+# should be independently deployable. Clients are composed of
 # an application programming interface and a command line
 # interface. In our make targets, the deploy-server deploys
 # the server, the deploy-client deploys the application
@@ -54,7 +54,7 @@ default:
 test: test-client test-scripts test-server
 	echo "runnint client and script tests"
 
-# test-all is depricated. 
+# test-all is deprecated. 
 # test-all: test-client test-scripts test-server
 
 # What does it mean to test a client. This is a test of a client
@@ -117,15 +117,15 @@ test-server:
 
 deploy: deploy-client deploy-scripts deploy-server
 
-# deploy-all is depricated
+# deploy-all is deprecated
 # deploy-all: deploy-client deploy-scripts deploy-server
 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
 deploy-libs:
 
-# Deploying scripts need some special care. They need to run
-# in a certian runtime environment. Users should not have
+# Deploying scripts needs some special care. They need to run
+# in a certain runtime environment. Users should not have
 # to modify their user environments to run kbase scripts other
 # than just sourcing a single user-env script. The creation
 # of this user-env script is the responsibility of the code
