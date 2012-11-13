@@ -29,8 +29,8 @@ my $date = `date`;
   put your perl scripts and java run scripts here
 `;
 
-`mkdir "$name/test-client"`;
-`cat > "$name/test-client/readme-client-tests.txt" << EOF
+`mkdir "$name/client-tests"`;
+`cat > "$name/client-tests/readme-client-tests.txt" << EOF
   put your client library tests here
 `;
 
