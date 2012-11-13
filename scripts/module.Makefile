@@ -1,6 +1,7 @@
 TOP_DIR = ../..
 DEPLOY_RUNTIME ?= /kb/runtime
 TARGET ?= /kb/deployment
+SERVICE_SPEC = 
 
 #include $(TOP_DIR)/tools/Makefile.common
 
@@ -122,6 +123,11 @@ deploy: deploy-client deploy-scripts deploy-server
 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
+# The deploy-libs and deploy-scripts targets are used to recognize
+# and delineate the client types, mainly a set of libraries that
+# implement an application programming interface and a set of 
+# command line scripts that provide command based execution of
+# individual api functions and aggregated sets of api functions.
 deploy-libs:
 
 # Deploying scripts needs some special care. They need to run
@@ -158,7 +164,39 @@ deploy-scripts:
 		$(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
 	done
 
-deploy-docs:
-
+# Deploying a server refers to the deployment of ...{TODO}
 deploy-server:
+
+# Deploying docs here refers to the deployment of documentation
+# of the API. We'll include a description of deploying documentation
+# of command line interface scripts when we have a better understanding of
+# how to standardize and automate CLI documentation.
+
+# compile docs should depend on build-libs so that we are ensured
+# of having a set of documentation that is based on the latest
+# type spec.
+deploy-docs: build-docs
+	cp docs/*.html $(TARGET)/services/$(SERVICE_NAME)/webroot/.
+
+# The location of the Client.pm file depends on the --client param
+# that is provided to the compile_typespec command. The
+# compile_typespec command is called in the build-libs target.
+build-docs: compile-docs
+	pod2html --infile=lib/Bio/KBase/$(SERVICE_NAME)/Client.pm --outfile=docs/$(SERVICE_NAME).html
+
+# Use this if you want to unlink the generation of the docs from
+# the generation of the libs. Not recommended, but could be a
+# reason for it that I'm not seeing.
+compile-docs: build-libs
+
+build-libs:
+	compile_typespec
+		--psgi $(SERVICE_PSGI_FILE) \
+		--impl Bio::KBase::$(SERVICE_NAME)::$(SERVICE_NAME)Impl \
+		--service Bio::KBase::$(SERVICE_NAME)::Service \
+		--client Bio::KBase::$(SERVICE_NAME)::Client \
+		--py biokbase/$(SERVICE_NAME)/Client \
+		--js javascript/$(SERVICE_NAME)/Client \
+		--scripts scripts \
+		$(SERVICE_SPEC) lib
 
