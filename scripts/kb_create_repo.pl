@@ -1,4 +1,38 @@
 #!/usr/bin/perl -w
+
+=head1 NAME
+
+    kb_create_repo
+
+=head1 SYNOPSIS
+
+    kb_create_repo.pl -name <repo_name>
+
+    kb_create_repo.pl -name <repo_name> -java
+
+=head1 DESCRIPTION
+
+Create a new directory that represents a skeleton for building a service module.
+Basic subdirectories are created, and some care is given to emmulate language idioms
+for setting up a module's directory structure.
+
+=over 4
+
+=item -java
+
+The module will be a java service module. The default is a perl service module.
+
+=back
+
+=cut
+
+
+
+
+
+
+
+
 use strict;
 use IO::File;
 use Getopt::Long;
@@ -43,6 +77,34 @@ my $date = `date`;
 `cat > "$name/server-tests/readme-server-tests.txt" << EOF
   put your server tests here
 `;
+
+
+`mkdir "$name/service"`;
+open STOP_SERVICE, ">$name/service/stop_service.tt"
+	or die "could not open $name/service/stop_service.tt for write";
+print STOP_SERVICE <<'END';
+#!/bin/sh
+export KB_TOP=[% kb_top %]
+export KB_RUNTIME=[% kb_runtime %]
+export PATH=$KB_TOP/bin:$KB_RUNTIME/bin:$PATH
+export PERL5LIB=$KB_TOP/lib
+export KB_SERVICE_DIR=$KB_TOP/services/[% kb_service_name %]
+
+pid_file=$KB_SERVICE_DIR/service.pid
+
+if [ ! -f $pid_file ] ; then
+	echo "No pid file $pid_file found for service [% kb_service_name %]" 1>&2
+	exit 1
+fi
+
+pid=`cat $pid_file`
+
+kill $pid
+END
+
+
+
+
 
 
 if ($is_java) {

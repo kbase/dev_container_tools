@@ -2,8 +2,12 @@
 #
 # Build a mac app wrapper of the current dev container.
 #
+# Argument needs to be the KBase.app application name.
+#
 
 use File::Temp;
+use File::Slurp;
+use Data::Dumper;
 use strict;
 use Cwd 'abs_path';
 use File::Copy;
@@ -56,9 +60,11 @@ close($tmp);
 #
 # And run.
 #
+
 my $rc = system("osascript", $tmp->filename);
 if ($rc != 0)
 {
+    print read_file($tmp->filename);
     die "Error running applescript\n";
 }
 
@@ -98,10 +104,11 @@ if ($rc != 0) {
 # And write our user-init script.
 #
 
-write_user_init("$target/user-env.sh");
+write_user_bash_init("$target/user-env.sh");
+write_user_csh_init("$target/user-env.csh");
+write_user_zsh_init("$target/user-env.zsh");
 
-
-sub write_user_init
+sub write_user_bash_init
 {
     my($file) = @_;
     open(F, ">", $file) or die "Cannot write $file: $!";
@@ -115,6 +122,59 @@ export KB_RUNTIME="$_dir/runtime"
 export KB_PERL_PATH="$_dir/deployment/lib"
 export PATH=$KB_RUNTIME/bin:$KB_TOP/bin:$PATH
 export PERL5LIB=$KB_PERL_PATH
+
+echo ""
+echo "Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation."
+echo ""
+EOF
+    close(F);
+    chmod(0755, $file);
+}
+
+sub write_user_zsh_init
+{
+    my($file) = @_;
+    open(F, ">", $file) or die "Cannot write $file: $!";
+    print F <<'EOF';
+#!/bin/sh
+
+_dir=`dirname "$0"`
+_dir=`cd "$_dir"; pwd`
+
+export KB_TOP="$_dir/deployment"
+export KB_RUNTIME="$_dir/runtime"
+export KB_PERL_PATH="$_dir/deployment/lib"
+export PATH=$KB_RUNTIME/bin:$KB_TOP/bin:$PATH
+export PERL5LIB=$KB_PERL_PATH
+
+echo ""
+echo "Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation."
+echo ""
+EOF
+    close(F);
+    chmod(0755, $file);
+}
+
+sub write_user_csh_init
+{
+    my($file) = @_;
+    open(F, ">", $file) or die "Cannot write $file: $!";
+    print F <<EOF;
+
+set kb_cmd=(\$_)
+set kb_path=`echo \$kb_cmd | perl -ne '/^\\s*source\\s+"?(.*)"?\$/ and print "\$1\\n"'`
+set kb_path=`dirname \$kb_path`
+set kb_path=`cd \$kb_path; pwd`
+
+setenv KB_TOP "\$kb_path/deployment"
+setenv KB_RUNTIME "\$kb_path/runtime"
+setenv KB_PERL_PATH "\$kb_path/deployment/lib"
+setenv PATH \$KB_RUNTIME/bin:\$KB_TOP/bin:\$PATH
+setenv PERL5LIB \$KB_PERL_PATH
+
+echo ""
+echo "Welcome to the KBase interactive shell. Please visit http://kbase.us/developer-zone/ for documentation."
+echo ""
 EOF
     close(F);
     chmod(0755, $file);
@@ -130,8 +190,8 @@ sub write_applescript
     print $fh "store script myScript in \"$dir\"\n";
 }
 
-    
-    
+
+
 
 
 sub application_applescript
@@ -142,11 +202,19 @@ set here to path to me
 
 set base to POSIX path of here
 
+set shell_type to do shell script "/usr/bin/perl -e '$s = (getpwuid($>))[8]; print $s =~ /csh/ ? \"csh\\n\" : ($s =~ /zsh/ ? \"zsh\\n\" : \"bash\\n\")'"
 
-set init to "source '" & base & "/user-env.sh'"
+if shell_type = "csh"
+    set init to "source \"" & base & "/user-env.csh\""
+else if shell_type = "zsh"
+    set init to "source \"" & base & "/user-env.zsh\""
+else 
+    set init to "source \"" & base & "/user-env.sh\""
+end if
+    
 tell application "Terminal"
      activate
-     
+
      do script with command init
 end tell
 

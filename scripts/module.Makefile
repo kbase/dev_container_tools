@@ -1,6 +1,7 @@
 TOP_DIR = ../..
 DEPLOY_RUNTIME ?= /kb/runtime
 TARGET ?= /kb/deployment
+SERVICE_SPEC = 
 
 #include $(TOP_DIR)/tools/Makefile.common
 
@@ -24,15 +25,25 @@ SERVER_TESTS = $(wildcard server-tests/*.t)
 # science applications can be built.
 
 # A service is composed of a client and a server, each of which
-# should be independantly deployable. Clients is composed of
+# should be independently deployable. Clients are composed of
 # an application programming interface and a command line
 # interface. In our make targets, the deploy-server deploys
 # the server, the deploy-client deploys the application
 # programming interface libraries, and the deploy-scripts deploys
 # the command line interface (usually scripts written in a
-# scripting language but java executables allso qualify), and the
-# deploy-all would be equivelant to deploying a service (client
+# scripting language but java executables also qualify), and the
+# deploy target would be equivelant to deploying a service (client
 # libs, scripts, and server).
+
+# Because the deployment of the server side code depends on the
+# specific software module being deployed, the strategy needs
+# to be one that leaves this decision to the module developer.
+# This is done by having the deploy target depend on the
+# deploy-server target. The module developer who chooses for
+# good reason not to deploy the server with the client simply
+# manages this dependancy accordingly. One option is to have
+# a deploy-server target that does nothing, the other is to
+# remove the dependancy from the deploy target.
 
 # A smiliar naming convention is used for tests. 
 
@@ -41,10 +52,11 @@ default:
 
 # Test Section
 
-test: test-client test-scripts
-	echo "runnint cleint and script tests"
+test: test-client test-scripts test-server
+	echo "runnint client and script tests"
 
-test-all: test-client test-scripts test-server
+# test-all is deprecated. 
+# test-all: test-client test-scripts test-server
 
 # What does it mean to test a client. This is a test of a client
 # library. If it is a client-server module, then it should be
@@ -104,14 +116,22 @@ test-server:
 # command line interface (scripts). The deployment of client
 # artifacts should not be dependent on deployment of a server.
 
-deploy: deploy-client deploy-scripts
+deploy: deploy-client deploy-scripts deploy-server
 
-deploy-all: deploy-client deploy-scripts deploy-server
+# deploy-all is deprecated
+# deploy-all: deploy-client deploy-scripts deploy-server
 
 deploy-client: deploy-libs deploy-scripts deploy-docs
 
-# Deploying scripts need some special care. They need to run
-# in a certian runtime environment. Users should not have
+# The deploy-libs and deploy-scripts targets are used to recognize
+# and delineate the client types, mainly a set of libraries that
+# implement an application programming interface and a set of 
+# command line scripts that provide command based execution of
+# individual api functions and aggregated sets of api functions.
+deploy-libs:
+
+# Deploying scripts needs some special care. They need to run
+# in a certain runtime environment. Users should not have
 # to modify their user environments to run kbase scripts other
 # than just sourcing a single user-env script. The creation
 # of this user-env script is the responsibility of the code
@@ -144,5 +164,39 @@ deploy-scripts:
 		$(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
 	done
 
+# Deploying a server refers to the deployment of ...{TODO}
 deploy-server:
+
+# Deploying docs here refers to the deployment of documentation
+# of the API. We'll include a description of deploying documentation
+# of command line interface scripts when we have a better understanding of
+# how to standardize and automate CLI documentation.
+
+# compile docs should depend on build-libs so that we are ensured
+# of having a set of documentation that is based on the latest
+# type spec.
+deploy-docs: build-docs
+	cp docs/*.html $(TARGET)/services/$(SERVICE_NAME)/webroot/.
+
+# The location of the Client.pm file depends on the --client param
+# that is provided to the compile_typespec command. The
+# compile_typespec command is called in the build-libs target.
+build-docs: compile-docs
+	pod2html --infile=lib/Bio/KBase/$(SERVICE_NAME)/Client.pm --outfile=docs/$(SERVICE_NAME).html
+
+# Use this if you want to unlink the generation of the docs from
+# the generation of the libs. Not recommended, but could be a
+# reason for it that I'm not seeing.
+compile-docs: build-libs
+
+build-libs:
+	compile_typespec
+		--psgi $(SERVICE_PSGI_FILE) \
+		--impl Bio::KBase::$(SERVICE_NAME)::$(SERVICE_NAME)Impl \
+		--service Bio::KBase::$(SERVICE_NAME)::Service \
+		--client Bio::KBase::$(SERVICE_NAME)::Client \
+		--py biokbase/$(SERVICE_NAME)/Client \
+		--js javascript/$(SERVICE_NAME)/Client \
+		--scripts scripts \
+		$(SERVICE_SPEC) lib
 
