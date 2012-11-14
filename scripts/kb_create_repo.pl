@@ -1,14 +1,11 @@
-#!/usr/bin/perl -w
-
 =head1 NAME
 
     kb_create_repo
 
 =head1 SYNOPSIS
 
-    kb_create_repo.pl -name <repo_name>
-
-    kb_create_repo.pl -name <repo_name> -java
+    kb_create_repo -name <repo_name>
+    kb_create_repo -name <repo_name> -java
 
 =head1 DESCRIPTION
 
@@ -17,6 +14,16 @@ Basic subdirectories are created, and some care is given to emmulate language id
 for setting up a module's directory structure.
 
 =over 4
+
+=item -h --help
+
+Help information
+
+=item -name
+
+The name of the module (repo) that you wish to create. This ideally
+represents a one to one mapping between the module name and the
+git repository name.
 
 =item -java
 
