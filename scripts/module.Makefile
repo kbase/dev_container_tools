@@ -53,7 +53,7 @@ default:
 # Test Section
 
 test: test-client test-scripts test-server
-	echo "runnint client and script tests"
+	@echo "running client and script tests"
 
 # test-all is deprecated. 
 # test-all: test-client test-scripts test-server
@@ -176,7 +176,7 @@ deploy-scripts:
 	for src in $(SRC_PERL) ; do \
 		basefile=`basename $$src`; \
 		base=`basename $$src .pl`; \
-		echo install $$src $$base ; \
+		@echo install $$src $$base ; \
 		cp $$src $(TARGET)/plbin ; \
 		$(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
 	done
