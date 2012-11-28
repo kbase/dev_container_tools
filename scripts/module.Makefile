@@ -52,16 +52,16 @@ default:
 
 # Test Section
 
-test: test-client test-scripts test-server
+test: test-client test-scripts test-service
 	@echo "running client and script tests"
 
 # test-all is deprecated. 
-# test-all: test-client test-scripts test-server
+# test-all: test-client test-scripts test-service
 #
 # What does it mean to test a client. This is a test of a client
 # library. If it is a client-server module, then it should be
 # run against a running server. You can say that this also tests
-# the server, and I agree. You can add a test-server dependancy
+# the server, and I agree. You can add a test-service dependancy
 # to the test-client target if it makes sense to you. This test
 # example assumes there is already a tested running server.
 test-client:
@@ -78,7 +78,7 @@ test-client:
 # What does it mean to test a script? A script test should test
 # the command line scripts. If the script is a client in a client-
 # server architecture, then there should be tests against a 
-# running server. You can add a test-server dependancy to the
+# running server. You can add a test-service dependancy to the
 # test-client target. You could also add a deploy-service and
 # start-server dependancy to the test-scripts target if it makes
 # sense to you. Future versions of the make files for services
@@ -96,10 +96,10 @@ test-scripts:
 
 # What does it mean to test a server. A server test should not
 # rely on the client libraries or scripts in so far as you should
-# not have a test-server target that depends on the test-client
+# not have a test-service target that depends on the test-client
 # or test-scripts targets. Otherwise, a circular dependency
 # graph could result.
-test-server:
+test-service:
 	# run each test
 	for t in $(SERVER_TESTS) ; do \
 		if [ -f $$t ] ; then \
@@ -129,10 +129,10 @@ test-server:
 # of the server and it's related architecture. For illustrative
 # purposes, we include the dependency in the deploy target as we
 # prefer this when it is reasonable."
-deploy: deploy-client deploy-scripts deploy-service
+deploy: deploy-client
 
 # deploy-all deploys client *and* server
-deploy-all: deploy-client deploy-scripts deploy-service
+deploy-all: deploy-client deploy-service
 
 #
 # Deploy client should deploy the client artifacts, mainly
