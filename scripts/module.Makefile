@@ -27,7 +27,7 @@ SERVER_TESTS = $(wildcard server-tests/*.t)
 # A service is composed of a client and a server, each of which
 # should be independently deployable. Clients are composed of
 # an application programming interface and a command line
-# interface. In our make targets, the deploy-server deploys
+# interface. In our make targets, the deploy-service deploys
 # the server, the deploy-client deploys the application
 # programming interface libraries, and the deploy-scripts deploys
 # the command line interface (usually scripts written in a
@@ -39,10 +39,10 @@ SERVER_TESTS = $(wildcard server-tests/*.t)
 # specific software module being deployed, the strategy needs
 # to be one that leaves this decision to the module developer.
 # This is done by having the deploy target depend on the
-# deploy-server target. The module developer who chooses for
+# deploy-service target. The module developer who chooses for
 # good reason not to deploy the server with the client simply
 # manages this dependancy accordingly. One option is to have
-# a deploy-server target that does nothing, the other is to
+# a deploy-service target that does nothing, the other is to
 # remove the dependancy from the deploy target.
 #
 # A smiliar naming convention is used for tests. 
@@ -79,7 +79,7 @@ test-client:
 # the command line scripts. If the script is a client in a client-
 # server architecture, then there should be tests against a 
 # running server. You can add a test-server dependancy to the
-# test-client target. You could also add a deploy-server and
+# test-client target. You could also add a deploy-service and
 # start-server dependancy to the test-scripts target if it makes
 # sense to you. Future versions of the make files for services
 # will move in this direction.
@@ -117,7 +117,7 @@ test-server:
 # artifacts should not be dependent on deployment of a server,
 # although we recommend deploying the server code with the
 # client code if it is useful. We will assume it is useful
-# in this target, just delete the dependancy on deploy-server
+# in this target, just delete the dependancy on deploy-service
 # if you don't want the server code deployed with the client
 # code.
 #
@@ -129,10 +129,11 @@ test-server:
 # of the server and it's related architecture. For illustrative
 # purposes, we include the dependency in the deploy target as we
 # prefer this when it is reasonable."
-deploy: deploy-client deploy-scripts deploy-server
+deploy: deploy-client deploy-scripts deploy-service
 
-# deploy-all is deprecated
-# deploy-all: deploy-client deploy-scripts deploy-server
+# deploy-all deploys client *and* server
+deploy-all: deploy-client deploy-scripts deploy-service
+
 #
 # Deploy client should deploy the client artifacts, mainly
 # the application programming interface libraries, command
@@ -181,7 +182,7 @@ deploy-scripts:
 	done
 
 # Deploying a server refers to the deployment of ...{TODO}
-deploy-server:
+deploy-service:
 
 # Deploying docs here refers to the deployment of documentation
 # of the API. We'll include a description of deploying documentation
