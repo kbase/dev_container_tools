@@ -27,7 +27,8 @@ git repository name.
 
 =item -java
 
-The module will be a java service module. The default is a perl service module.
+If specified, the module will be a java service module. If -java is not specified
+on the commandline, the default perl service module is created.
 
 =back
 
