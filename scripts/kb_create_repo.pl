@@ -1,14 +1,11 @@
-#!/usr/bin/perl -w
-
 =head1 NAME
 
     kb_create_repo
 
 =head1 SYNOPSIS
 
-    kb_create_repo.pl -name <repo_name>
-
-    kb_create_repo.pl -name <repo_name> -java
+    kb_create_repo -name <repo_name>
+    kb_create_repo -name <repo_name> -java
 
 =head1 DESCRIPTION
 
@@ -18,9 +15,20 @@ for setting up a module's directory structure.
 
 =over 4
 
+=item -h --help
+
+Help information
+
+=item -name
+
+The name of the module (repo) that you wish to create. This ideally
+represents a one to one mapping between the module name and the
+git repository name.
+
 =item -java
 
-The module will be a java service module. The default is a perl service module.
+If specified, the module will be a java service module. If -java is not specified
+on the commandline, the default perl service module is created.
 
 =back
 
