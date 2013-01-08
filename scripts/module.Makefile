@@ -216,7 +216,7 @@ compile-docs: build-libs
 # docs depends on the compiled libs.
 
 build-libs:
-	compile_typespec
+	compile_typespec \
 		--psgi $(SERVICE_PSGI_FILE) \
 		--impl Bio::KBase::$(SERVICE_NAME)::$(SERVICE_NAME)Impl \
 		--service Bio::KBase::$(SERVICE_NAME)::Service \
