@@ -218,7 +218,7 @@ compile-docs: build-libs
 
 build-libs:
 	compile_typespec \
-		--psgi $(SERVICE_PSGI_FILE) \
+		--psgi $(SERVICE_NAME).psgi \
 		--impl Bio::KBase::$(SERVICE_NAME)::$(SERVICE_NAME)Impl \
 		--service Bio::KBase::$(SERVICE_NAME)::Service \
 		--client Bio::KBase::$(SERVICE_NAME)::Client \
