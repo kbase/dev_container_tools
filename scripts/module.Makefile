@@ -21,8 +21,8 @@ SERVER_TESTS = $(wildcard server-tests/*.t)
 
 # This is a very client centric view of release engineering.
 # We assume our primary product for the community is the client
-# libraries and command line interfaces on which specific 
-# science applications can be built.
+# libraries,a command line interfaces, and the related documentation
+# from which specific science applications can be built.
 #
 # A service is composed of a client and a server, each of which
 # should be independently deployable. Clients are composed of
