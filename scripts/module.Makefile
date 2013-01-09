@@ -181,7 +181,11 @@ deploy-scripts:
 		$(WRAP_PERL_SCRIPT) "$(TARGET)/plbin/$$basefile" $(TARGET)/bin/$$base ; \
 	done
 
-# Deploying a server refers to the deployment of ...{TODO}
+# Deploying a service refers to to deploying the capability
+# to run a service. Becuase service code is often deployed 
+# as part of the libs, meaning service code gets deployed
+# when deploy-libs is called, the deploy service target is
+# generally concerned with the service start and stop scripts.
 
 deploy-service:
 
