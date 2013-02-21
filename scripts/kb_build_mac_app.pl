@@ -22,7 +22,10 @@ my $icon = "$libpath/DeploymentTools/KBASE_Icon_03.icns";
 $icon = abs_path($icon);
 -f $icon or die "Icon $icon not found\n";
 
-my $rc = GetOptions("version=s" => \$version);
+my $autodeploy_config;
+
+my $rc = GetOptions("version=s" => \$version,
+		    "autodeploy-config=s" => \$autodeploy_config);
 
 ($rc && @ARGV == 1) or die "Usage: build-app [--version version] target\n";
 
@@ -94,8 +97,20 @@ if ($rc != 0) {
 #
 # We may now deploy into the application.
 #
-print STDERR "deploy\n";
-$rc = system("make", "TARGET=$target/deployment", "WRAP_PERL_TOOL=wrap_perl_app", "deploy");
+my @cmd;
+if ($autodeploy_config)
+{
+    @cmd = ("perl", "auto-deploy",
+	    "--target", "$target/deployment",
+	    '--override', "WRAP_PERL_TOOL=wrap_perl_app",
+	    abs_path($autodeploy_config));
+}
+else
+{
+    @cmd = ("make", "TARGET=$target/deployment", "WRAP_PERL_TOOL=wrap_perl_app", "deploy");
+}
+print STDERR "deploy with @cmd\n";
+my $rc = system(@cmd);
 if ($rc != 0) {
     die "Error deploying";
 }
