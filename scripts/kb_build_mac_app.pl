@@ -103,6 +103,7 @@ if ($autodeploy_config)
     @cmd = ("perl", "auto-deploy",
 	    "--target", "$target/deployment",
 	    '--override', "WRAP_PERL_TOOL=wrap_perl_app",
+	    '--override', "WRAP_PYTHON_TOOL=wrap_python_app",
 	    abs_path($autodeploy_config));
 }
 else
