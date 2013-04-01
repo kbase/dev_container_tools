@@ -10,8 +10,8 @@
 =head1 DESCRIPTION
 
 Create a new directory that represents a skeleton for building a service module.
-Basic subdirectories are created, and some care is given to emmulate language idioms
-for setting up a module's directory structure.
+Basic subdirectories are created, and some care is given to emmulate language
+idioms for setting up a module's directory structure.
 
 =over 4
 
@@ -25,16 +25,33 @@ The name of the module (repo) that you wish to create. This ideally
 represents a one to one mapping between the module name and the
 git repository name.
 
+=item -top_dir
+
+If specified, this programs considers top_dir to be the top dir of
+the dev_container. THis program will look for a module.Makefile in
+the top_dir scripts directory and copy it to the mew service module.
+
 =item -java
 
-If specified, the module will be a java service module. If -java is not specified
-on the commandline, the default perl service module is created.
+If specified, the module will be a java service module. If -java is not
+specified on the commandline, the default perl service module is created.
 
 =back
 
+=head1 DETAIL
+
+create the main directory
+create a Makefile in the main directory
+create the scripts directory
+create the lib directory
+create the three test directoreis
+create the service directory
+write the start_service template in the service directory
+write the stop_service template in the service directory
+write the process template file in the service directory
+
+
 =cut
-
-
 
 
 
@@ -44,13 +61,26 @@ on the commandline, the default perl service module is created.
 use strict;
 use IO::File;
 use Getopt::Long;
-use vars qw( $is_java $name $is_help);
-GetOptions ('java',   \$is_java,
+use Pod::Find qw (pod_where);
+use Pod::Usage;
+use vars qw( $top_dir $is_java $name $is_help);
+
+my $man  = 0;
+my $help = 0;
+GetOptions ('top_dir=s', \$top_dir,
+            'java',   \$is_java,
             'name=s', \$name,
-            'h',      \$is_help,
-            'help',   \$is_help,
-        );
-usage() if $is_help;
+            'h',      \$help,
+            'help',   \$help,
+        ) or pod2usage(0);
+pod2usage(-exitstatus => 0,
+	  -output => \*STDOUT,
+	  -verbose => 2,
+	  -noperldoc => 1,
+	  -input => pod_where({-inc => -1}, __PACKAGE__)
+) if $help or $man;
+
+
 usage() unless $name;
 error("$name already exists") if -e $name;
 
@@ -86,10 +116,49 @@ my $date = `date`;
   put your server tests here
 `;
 
-
 `mkdir "$name/service"`;
+`cat > "$name/service/readme.txt" << EOF
+  the scripts directory contains templates used to create service scripts
+`;
+
+`mkdir "$name/distribution"`;
+`cat > "$name/distribution/readme.txt" << EOF
+  the distribution directory contains distributions such as a .tar.gz
+`;
+
+
+# populate the service module directory with some standard files
+if ( defined $top_dir and -d $top_dir ) {
+  `cp "$top_dir/doc/module.Makefile" "$name/Makefile"`;
+}
+elsif ( exists $ENV{TOP_DIR} and defined $ENV{TOP_DIR} ) {
+  `cp "$ENV{TOP_DIR}/doc/module.Makefile" "$name/Makefile"`;
+}
+else {
+  print "could not find $top_dir/doc/module.Makefile\n";
+  print "continuing without createing the service module Makefile\n\n";
+}
+
+open START_SERVICE, ">$name/service/start_service.tt"
+    or die " cannot open $name/service/start_service.tt for write";
+
+print START_SERVICE <<'END';
+#!/bin/sh
+export KB_TOP=[% kb_top %]
+export KB_RUNTIME=[% kb_runtime %]
+export PATH=$KB_TOP/bin:$KB_RUNTIME/bin:$PATH
+export PERL5LIB=$KB_TOP/lib
+export KB_SERVICE_DIR=$KB_TOP/services/[% kb_service_name %]
+
+pid_file=$KB_SERVICE_DIR/service.pid
+
+exec $KB_RUNTIME/bin/perl $KB_RUNTIME/bin/starman --listen :[% kb_service_port %] --pid $pid_file $KB_TOP/lib/[% kb_psgi %]
+
+END
+close START_SERVICE;
+
 open STOP_SERVICE, ">$name/service/stop_service.tt"
-	or die "could not open $name/service/stop_service.tt for write";
+        or die "could not open $name/service/stop_service.tt for write";
 print STOP_SERVICE <<'END';
 #!/bin/sh
 export KB_TOP=[% kb_top %]
@@ -101,20 +170,35 @@ export KB_SERVICE_DIR=$KB_TOP/services/[% kb_service_name %]
 pid_file=$KB_SERVICE_DIR/service.pid
 
 if [ ! -f $pid_file ] ; then
-	echo "No pid file $pid_file found for service [% kb_service_name %]" 1>&2
-	exit 1
+  echo "No pid file $pid_file found for service [% kb_service_name %]" 1>&2
+  exit 1
 fi
 
 pid=`cat $pid_file`
 
 kill $pid
+
 END
+close STOP_SERVICE;
+
+open PROCESS, ">$name/service/process.tt"
+    or die " cannot open $name/service/process.tt for write";
+
+print PROCESS <<'END';
+check process [% kb_service_name %] with pidfile [% kb_top %]/services/[% kb_service_name %]/service.pid
+  start program = "[% kb_top %]/services/[% kb_service_name %]/start_service" with timeout 60 seconds
+  stop  program = "[% kb_top %]/services/[% kb_service_name %]/stop_service"
+  if failed port [% kb_service_port %] type tcp 
+     with timeout 15 seconds
+     then restart
+  if 3 restarts within 5 cycles then timeout
+  group [% kb_service_name %]_group
+
+END
+close PROCESS;
 
 
-
-
-
-
+# java section. this is likely out of date.
 if ($is_java) {
 
 `mkdir "$name/src"`;
