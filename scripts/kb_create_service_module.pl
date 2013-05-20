@@ -1,11 +1,11 @@
 =head1 NAME
 
-    kb_create_repo
+    kb_create_service_module
 
 =head1 SYNOPSIS
 
-    kb_create_repo -name <repo_name>
-    kb_create_repo -name <repo_name> -java
+    kb_create_service_module -name <repo_name>
+    kb_create_service_module -name <repo_name> -java
 
 =head1 DESCRIPTION
 
@@ -28,8 +28,8 @@ git repository name.
 =item -top_dir
 
 If specified, this programs considers top_dir to be the top dir of
-the dev_container. THis program will look for a module.Makefile in
-the top_dir scripts directory and copy it to the mew service module.
+the dev_container. This program will look for a module.Makefile in
+the top_dir templates directory and copy it to the mew service module.
 
 =item -java
 
@@ -81,7 +81,7 @@ pod2usage(-exitstatus => 0,
 ) if $help or $man;
 
 
-usage() unless $name;
+unless ($name) { print "missing -name paramter, try --help\n"; exit(0); }
 error("$name already exists") if -e $name;
 
 my $date = `date`;
@@ -129,73 +129,34 @@ my $date = `date`;
 
 # populate the service module directory with some standard files
 if ( defined $top_dir and -d $top_dir ) {
-  `cp "$top_dir/doc/module.Makefile" "$name/Makefile"`;
+  `cp "$top_dir/template/module.Makefile" "$name/Makefile"`;
 }
 elsif ( exists $ENV{TOP_DIR} and defined $ENV{TOP_DIR} ) {
-  `cp "$ENV{TOP_DIR}/doc/module.Makefile" "$name/Makefile"`;
+  `cp "$ENV{TOP_DIR}/template/module.Makefile" "$name/Makefile"`;
 }
 else {
-  print "could not find $top_dir/doc/module.Makefile\n";
+  print "could not find $top_dir/template/module.Makefile\n";
+  print "looks like TOP_DIR or top_dir is not defined\n";
   print "continuing without createing the service module Makefile\n\n";
 }
 
-open START_SERVICE, ">$name/service/start_service.tt"
-    or die " cannot open $name/service/start_service.tt for write";
-
-print START_SERVICE <<'END';
-#!/bin/sh
-export KB_TOP=[% kb_top %]
-export KB_RUNTIME=[% kb_runtime %]
-export PATH=$KB_TOP/bin:$KB_RUNTIME/bin:$PATH
-export PERL5LIB=$KB_TOP/lib
-export KB_SERVICE_DIR=$KB_TOP/services/[% kb_service_name %]
-
-pid_file=$KB_SERVICE_DIR/service.pid
-
-exec $KB_RUNTIME/bin/perl $KB_RUNTIME/bin/starman --listen :[% kb_service_port %] --pid $pid_file $KB_TOP/lib/[% kb_psgi %]
-
-END
-close START_SERVICE;
-
-open STOP_SERVICE, ">$name/service/stop_service.tt"
-        or die "could not open $name/service/stop_service.tt for write";
-print STOP_SERVICE <<'END';
-#!/bin/sh
-export KB_TOP=[% kb_top %]
-export KB_RUNTIME=[% kb_runtime %]
-export PATH=$KB_TOP/bin:$KB_RUNTIME/bin:$PATH
-export PERL5LIB=$KB_TOP/lib
-export KB_SERVICE_DIR=$KB_TOP/services/[% kb_service_name %]
-
-pid_file=$KB_SERVICE_DIR/service.pid
-
-if [ ! -f $pid_file ] ; then
-  echo "No pid file $pid_file found for service [% kb_service_name %]" 1>&2
-  exit 1
-fi
-
-pid=`cat $pid_file`
-
-kill $pid
-
-END
-close STOP_SERVICE;
-
-open PROCESS, ">$name/service/process.tt"
-    or die " cannot open $name/service/process.tt for write";
-
-print PROCESS <<'END';
-check process [% kb_service_name %] with pidfile [% kb_top %]/services/[% kb_service_name %]/service.pid
-  start program = "[% kb_top %]/services/[% kb_service_name %]/start_service" with timeout 60 seconds
-  stop  program = "[% kb_top %]/services/[% kb_service_name %]/stop_service"
-  if failed port [% kb_service_port %] type tcp 
-     with timeout 15 seconds
-     then restart
-  if 3 restarts within 5 cycles then timeout
-  group [% kb_service_name %]_group
-
-END
-close PROCESS;
+if (defined $top_dir and -d $top_dir ) {
+  print "copying $top_dir/template/*.tt to $name/service/\n";
+  `cp "$top_dir/template/start_service.tt"  "$name/service/start_service.tt"`;
+  `cp "$top_dir/template/stop_service.tt" "$name/service/stop_service.tt"`;
+  `cp "$top_dir/template/process.tt" "$name/service/process.tt"`;
+}
+elsif (exists $ENV{TOP_DIR} and defined $ENV{TOP_DIR} ) {
+  `cp "$ENV{TOP_DIR}/template/start_service.tt" "$name/service/start_service.tt"`;
+  `cp "$ENV{TOP_DIR}/template/stop_service.tt" "$name/service/stop_service.tt"`;
+  `cp "$ENV{TOP_DIR}/template/process.tt" "$name/service/process.tt"`;
+}
+else {
+  print "could not find $top_dir teplates dir\n";
+  print "looks like TOP_DIR or top_dir is not defined\n";
+  print "continuing without createing the start_service, stop_service ",
+  print " and process template files\n\n";
+}
 
 
 # java section. this is likely out of date.
