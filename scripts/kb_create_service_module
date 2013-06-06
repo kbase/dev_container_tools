@@ -1,0 +1,127 @@
+#!/usr/bin/python
+
+"""
+Creates the skeletal structure for a new KBase service module.  
+This includes a complete directory structure as well as a complete Makefile, and sample required files for any service module.
+
+Directory structure is as follows:
+repo_name/
+    COMMANDS
+    DEPENDENCIES
+    docs/
+    .gitignore
+    lib/
+    Makefile
+    service_name.spec
+    README.txt
+    RELEASE_NOTES.txt
+    scripts/
+    test/    
+        client-tests/
+        script-tests/
+        server-tests/
+"""
+
+if __name__ == "__main__":
+    import sys
+    import os
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Generate the skeleton structure for a new service module.")
+    parser.add_argument('--repo_name', required=True, help='name of the git repository for this service module; e.g. taxonomy')
+    parser.add_argument('--service_name', required=True, help='name of the service; e.g. Taxonomy')
+    parser.add_argument('--service_port', required=True, type=int, help='port assigned for this service')
+    parser.add_argument('--container_dir', required=True, help='full path to the dev_container')
+    parser.add_argument('--runtime_dir', nargs='?', default='/kb/runtime', help='full path to the top level deployment directory; e.g. /kb/deployment')
+    parser.add_argument('--deploy_dir', nargs='?', default='/kb/deployment', help='full path to the top level runtime directory; e.g. /kb/runtime')
+    parser.add_argument('--python', action='store_true', help='write this service module implementation in python')
+    parser.add_argument('--perl', action='store_true', help='write this service module implementation in perl')
+
+    args = parser.parse_args()
+
+    if not args.python and not args.perl:
+        print parser.print_help()
+        print "You must specify either python or perl as the service module implementation language."
+        
+    #get the current directory
+    toolsDirectory = os.path.dirname(os.path.realpath(__file__))
+
+    #get the dev_container directory
+    topDirectory = args.container_dir
+    modulesDirectory = os.path.join(topDirectory, "modules")
+
+    #make the module top level directory
+    serviceDirectory = os.path.join(modulesDirectory,args.repo_name)
+    os.mkdir(serviceDirectory)
+    
+    #make the module child directories that are required for the Makefile to work
+    childDirectories = ['docs','lib','scripts','test']
+    
+    for d in childDirectories:
+        os.mkdir(os.path.join(serviceDirectory, d))
+
+    testSubDirectories = ['client-tests', 'script-tests', 'server-tests']
+
+    for d in testSubDirectories:
+        os.mkdir(os.path.join(os.path.join(serviceDirectory, "test"), d))
+
+    #generate the necessary files for a service module
+
+    #generate a readme text file
+    readmeFile = open(os.path.join(serviceDirectory, "README.txt"), 'w')
+    readmeFile.write("Sample README for " + args.service_name)
+    readmeFile.close()
+    
+    #generate a release notes file
+    releaseNotesFile = open(os.path.join(serviceDirectory, "RELEASE_NOTES.txt"), 'w')
+    releaseNotesFile.write("Sample RELEASE_NOTES for " + args.service_name)
+    releaseNotesFile.close()
+
+    #generate a COMMANDS file
+    commandsFile = open(os.path.join(serviceDirectory, "COMMANDS"), 'w')
+    commandsFile.write("#group-name\t" + args.repo_name + "\t" + args.service_name + "scripts\n")
+    commandsFile.write("#command-set" + "\t" + str(os.path.join("scripts", "(.*).pl")) + "\t" + args.repo_name)
+    commandsFile.close()
+    
+    #generate a DEPENDENCIES file
+    dependenciesFile = open(os.path.join(serviceDirectory, "DEPENDENCIES"), 'w')
+    dependenciesFile.write("typecomp\nkb_seed")
+    dependenciesFile.close()
+
+    #generate a skeleton html document
+    docsFile = open(os.path.join(os.path.join(serviceDirectory,"docs"),args.service_name + ".html"), 'w')
+    docsFile.write("<html><body>" + "Documentation for " + args.service_name + " is under construction." + "</body></html>\n")
+    docsFile.close()
+
+    #generate a Makefile
+    if args.python:
+        templateMakeFile = open(os.path.join(os.path.join(toolsDirectory,"template"),"python_service.Makefile"), 'r')
+        makefileTemplate = templateMakeFile.read()
+        templateMakeFile.close()
+    elif args.perl:
+        templateMakeFile = open(os.path.join(os.path.join(toolsDirectory,"template"),"perl_service.Makefile"), 'r')
+        makefileTemplate = templateMakeFile.read()
+        templateMakeFile.close()
+
+    makeContents = makefileTemplate % (topDirectory, args.runtime_dir, args.deploy_dir, args.service_name, args.repo_name, args.service_port)
+
+    makeFile = open(os.path.join(serviceDirectory, "Makefile"), 'w')
+    makeFile.write(makeContents)
+    makeFile.close()
+
+    #generate a skeleton typespec file
+    typespecFile = open(os.path.join(serviceDirectory, args.service_name + ".spec"), 'w')
+    typespecFile.write("module " + args.service_name + "\n" + "{\n" + "};\n")
+    typespecFile.close()
+
+    #generate some additional files that are nice to have
+    
+    #generate a .gitignore file to exclude files that don't belong in version control
+    gitignoreTemplateFile = open(os.path.join(os.path.join(toolsDirectory, "template"),".gitignore"), 'r')
+    gitignoreTemplate = gitignoreTemplateFile.read()
+    gitignoreTemplateFile.close()
+
+    gitignoreFile = open(os.path.join(serviceDirectory, ".gitignore"), 'w')
+    gitignoreFile.write(gitignoreTemplate)
+    gitignoreFile.close()
+#End of file
