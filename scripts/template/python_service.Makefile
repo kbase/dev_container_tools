@@ -345,5 +345,5 @@ clean:
 	rm -f pod2htmd.tmp
 
 
-include $(TOP_DIR)/tools/Makefile.common
-include $(TOP_DIR)/tools/Makefile.common.rules
+#include $(TOP_DIR)/tools/Makefile.common
+#include $(TOP_DIR)/tools/Makefile.common.rules
