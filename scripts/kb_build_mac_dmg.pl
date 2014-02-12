@@ -57,8 +57,10 @@ if ($size < 4096)
 # Create initial uncompressed disk image.
 #
 
+#my @cmd = ("hdiutil", "create", $uncomp_dmg, "-format", "UDRW",
+#	   "-size", "${size}k", "-srcfolder", $target, "-volname", $volume_name);
 my @cmd = ("hdiutil", "create", $uncomp_dmg, "-format", "UDRW",
-	   "-size", "${size}k", "-srcfolder", $target, "-volname", $volume_name);
+	   "-srcfolder", $target, "-volname", $volume_name);
 print "@cmd\n";
 system(@cmd);
 
@@ -67,6 +69,7 @@ system(@cmd);
 #
 
 my @mount = ("hdiutil", "attach", "-readwrite", $uncomp_dmg);
+sleep(10);
 
 my($dev, $volume);
 
